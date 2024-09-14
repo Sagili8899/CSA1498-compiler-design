@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+char productions[10][10],n;
+int epsilon_check(char s)
+{
+	for(int i=0;i<n;i++)
+	{
+		if(productions[i][0]==s && productions[i][3]=='#') return 1;
+	}
+	return 0;
+}
+int is_terminal(char s)
+{
+	if(!(isupper(s))) return 1;
+	return 0;
+}
+void compute_first(char s,int d=0)
+{
+	if(is_terminal(s)) printf("%c ",s);
+	else
+	{
+		for(int i=0;i<n;i++)
+		{
+			if(productions[i][0]==s)
+			{
+				if(is_terminal(productions[i][3]))
+				{
+					if(d==0) printf("%c ",productions[i][3]);
+					else
+					{
+						if(productions[i][3]!='#') printf("%c ",productions[i][3]);
+					}
+				}
+				else if(epsilon_check(productions[i][3]))
+				{
+					compute_first(productions[i][3],1);
+					compute_first(productions[i][4]);
+				}
+				else compute_first(productions[i][3]);
+			}
+		}
+	}
+}
+void compute_follow(char s)
+{
+	if(productions[0][0]==s) printf("$ ");
+	for(int i=0;i<n;i++)
+	{
+		for(int j=3;j<strlen(productions[i]);j++)
+		{
+			if(productions[i][j]==s)
+			{
+				if(productions[i][j+1]!='\0' && !epsilon_check(productions[i][j+1])) compute_first(productions[i][j+1]);
+				else if(productions[i][j+1]!='\0' && epsilon_check(productions[i][j+1]))
+				{
+					compute_first(productions[i][j+1]);
+					compute_follow(productions[i][0]);
+				}
+				else
+				{
+					if(productions[i][0]!=productions[i][j]) compute_follow(productions[i][0]);
+				}
+			}
+		}
+	}
+}
+int main()
+{
+	printf("Enter the Number of Productions:");
+	scanf("%d",&n);
+	for(int i=0;i<n;i++) scanf("%s",productions[i]);
+	for(int i=0;i<n;i++)
+	{
+		if(productions[i][0]==productions[i-1][0]) continue;
+		printf("FOLLOW(%c)={ ",productions[i][0]);
+		compute_follow(productions[i][0]);
+		printf(" }\n");
+	}
+}
